@@ -275,10 +275,10 @@ unsigned int Reader::ReadPhysicalRecord(Slice* result) {
     const unsigned int type = header[6];
     const uint32_t length = a | (b << 8);
     if (kHeaderSize + length > buffer_.size()) {
-      size_t drop_size = buffer_.size();
+      //size_t drop_size = buffer_.size();
       buffer_.clear();
       if (!eof_) {
-        ReportCorruption(drop_size, "bad record length");
+        //ReportCorruption(drop_size, "bad record length");
         return kBadRecord;
       }
       // If the end of the file has been reached without reading |length| bytes
@@ -307,9 +307,9 @@ unsigned int Reader::ReadPhysicalRecord(Slice* result) {
         // been corrupted and if we trust it, we could find some
         // fragment of a real log record that just happens to look
         // like a valid log record.
-        size_t drop_size = buffer_.size();
+        //size_t drop_size = buffer_.size();
         buffer_.clear();
-        ReportCorruption(drop_size, "checksum mismatch");
+        //ReportCorruption(drop_size, "checksum mismatch");
         return kBadRecord;
       }
     }
