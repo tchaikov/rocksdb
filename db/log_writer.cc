@@ -95,7 +95,7 @@ Status Writer::EmitPhysicalRecord(RecordType t, const char* ptr, size_t n) {
   final_crc = crc32c::Mask(final_crc);                 // Adjust for storage
   EncodeFixed32(buf, final_crc);
 
-  if (db_options_)
+  if (false && db_options_)
     Log(InfoLogLevel::INFO_LEVEL, db_options_->info_log,
 	"EmitPhysicalRecord crc %d becomes %d on log %d\n",
 	crc, final_crc, log_number_);

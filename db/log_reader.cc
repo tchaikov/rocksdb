@@ -303,7 +303,7 @@ unsigned int Reader::ReadPhysicalRecord(Slice* result) {
       uint32_t stored_crc = crc32c::Unmask(DecodeFixed32(header));
       uint32_t expected_crc = stored_crc ^ log_number_;
       uint32_t actual_crc = crc32c::Value(header + 6, 1 + length);
-      if (db_options_)
+      if (false && db_options_)
 	Log(InfoLogLevel::INFO_LEVEL, db_options_->info_log,
 	    "ReadPhysicalRecord stored %d expected %d actual %d on log %d\n",
 	    stored_crc, expected_crc, actual_crc, log_number_);
