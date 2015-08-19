@@ -23,7 +23,8 @@ Reader::Reporter::~Reporter() {
 Reader::Reader(unique_ptr<SequentialFile>&& _file, Reporter* reporter,
                bool checksum, uint64_t initial_offset,
 	       uint32_t log_num)
-    : file_(std::move(_file)),
+  : db_options_(NULL),
+      file_(std::move(_file)),
       reporter_(reporter),
       checksum_(checksum),
       backing_store_(new char[kBlockSize]),
@@ -302,6 +303,10 @@ unsigned int Reader::ReadPhysicalRecord(Slice* result) {
       uint32_t stored_crc = crc32c::Unmask(DecodeFixed32(header));
       uint32_t expected_crc = stored_crc ^ log_number_;
       uint32_t actual_crc = crc32c::Value(header + 6, 1 + length);
+      if (db_options_)
+	Log(InfoLogLevel::INFO_LEVEL, db_options_->info_log,
+	    "ReadPhysicalRecord stored %d expected %d actual %d on log %d\n",
+	    stored_crc, expected_crc, actual_crc, log_number_);
       if (actual_crc != expected_crc) {
         // Drop the rest of the buffer since "length" itself may have
         // been corrupted and if we trust it, we could find some

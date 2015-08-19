@@ -18,7 +18,8 @@ namespace rocksdb {
 namespace log {
 
 Writer::Writer(unique_ptr<WritableFile>&& dest, int log_number)
-    : dest_(std::move(dest)),
+    : db_options_(NULL),
+      dest_(std::move(dest)),
       block_offset_(0),
       log_number_(log_number) {
   for (int i = 0; i <= kMaxRecordType; i++) {
@@ -93,6 +94,11 @@ Status Writer::EmitPhysicalRecord(RecordType t, const char* ptr, size_t n) {
   uint32_t final_crc = crc ^ log_number_;              // XOR in log numb
   final_crc = crc32c::Mask(final_crc);                 // Adjust for storage
   EncodeFixed32(buf, final_crc);
+
+  if (db_options_)
+    Log(InfoLogLevel::INFO_LEVEL, db_options_->info_log,
+	"EmitPhysicalRecord crc %d becomes %d on log %d\n",
+	crc, final_crc, log_number_);
 
   // Write the header and the payload
   Status s = dest_->Append(Slice(buf, kHeaderSize));

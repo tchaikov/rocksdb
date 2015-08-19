@@ -14,6 +14,7 @@
 #include "db/log_format.h"
 #include "rocksdb/slice.h"
 #include "rocksdb/status.h"
+#include "rocksdb/options.h"
 
 namespace rocksdb {
 
@@ -56,6 +57,8 @@ class Reader {
 	 uint32_t log_num);
 
   ~Reader();
+
+  const DBOptions *db_options_;
 
   // Read the next record into *record.  Returns true if read
   // successfully, false if we hit end of the input.  May use

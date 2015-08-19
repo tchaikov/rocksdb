@@ -13,6 +13,7 @@
 #include "db/log_format.h"
 #include "rocksdb/slice.h"
 #include "rocksdb/status.h"
+#include "rocksdb/options.h"
 
 namespace rocksdb {
 
@@ -63,6 +64,8 @@ class Writer {
   // "*dest" must remain live while this Writer is in use.
   explicit Writer(unique_ptr<WritableFile>&& dest, int log_number);
   ~Writer();
+
+  const DBOptions *db_options_;
 
   Status AddRecord(const Slice& slice);
 

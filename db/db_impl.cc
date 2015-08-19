@@ -997,6 +997,7 @@ Status DBImpl::RecoverLogFiles(const std::vector<uint64_t>& log_numbers,
     // large sequence numbers).
     log::Reader reader(std::move(file), &reporter, true /*checksum*/,
                        0 /*initial_offset*/, log_number);
+    reader.db_options_ = &db_options_;
     Log(InfoLogLevel::INFO_LEVEL,
         db_options_.info_log, "Recovering log #%" PRIu64 "", log_number);
 
@@ -1005,6 +1006,8 @@ Status DBImpl::RecoverLogFiles(const std::vector<uint64_t>& log_numbers,
     Slice record;
     WriteBatch batch;
     while (reader.ReadRecord(&record, &scratch) && status.ok()) {
+      Log(InfoLogLevel::INFO_LEVEL,
+	  db_options_.info_log, " read one record size %d", record.size());
       if (record.size() < 12) {
         reporter.Corruption(record.size(),
                             Status::Corruption("log record too small"));
@@ -1029,6 +1032,8 @@ Status DBImpl::RecoverLogFiles(const std::vector<uint64_t>& log_numbers,
       if (last_seq > *max_sequence) {
         *max_sequence = last_seq;
       }
+      Log(InfoLogLevel::INFO_LEVEL,
+	  db_options_.info_log, "  last_seq %d", last_seq);
 
       if (!read_only) {
         // we can do this because this is called before client has access to the
@@ -3486,6 +3491,7 @@ Status DBImpl::SetNewMemtableAndNewLogFile(ColumnFamilyData* cfd,
 	lfile->SetPreallocationBlockSize(
             1.1 * mutable_cf_options.write_buffer_size);
 	new_log = new log::Writer(std::move(lfile), new_log_number);
+	new_log->db_options_ = &db_options_;
 	log_dir_synced_ = false;
       }
     }
@@ -3995,6 +4001,7 @@ Status DB::Open(const DBOptions& db_options, const std::string& dbname,
       lfile->SetPreallocationBlockSize(1.1 * max_write_buffer_size);
       impl->logfile_number_ = new_log_number;
       impl->log_.reset(new log::Writer(std::move(lfile), new_log_number));
+      impl->log_->db_options_ = &impl->db_options_;
 
       // set column family handles
       for (auto cf : column_families) {
