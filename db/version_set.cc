@@ -1902,7 +1902,7 @@ Status VersionSet::LogAndApply(ColumnFamilyData* column_family_data,
       if (s.ok()) {
         descriptor_file->SetPreallocationBlockSize(
             db_options_->manifest_preallocation_size);
-        descriptor_log_.reset(new log::Writer(std::move(descriptor_file)));
+        descriptor_log_.reset(new log::Writer(std::move(descriptor_file), 0));
         s = WriteSnapshot(descriptor_log_.get());
       }
     }
@@ -2155,7 +2155,8 @@ Status VersionSet::Recover(
     VersionSet::LogReporter reporter;
     reporter.status = &s;
     log::Reader reader(std::move(manifest_file), &reporter, true /*checksum*/,
-                       0 /*initial_offset*/);
+                       0 /*initial_offset*/,
+		       0);
     Slice record;
     std::string scratch;
     while (reader.ReadRecord(&record, &scratch) && s.ok()) {
@@ -2401,7 +2402,7 @@ Status VersionSet::ListColumnFamilies(std::vector<std::string>* column_families,
   VersionSet::LogReporter reporter;
   reporter.status = &s;
   log::Reader reader(std::move(file), &reporter, true /*checksum*/,
-                     0 /*initial_offset*/);
+                     0 /*initial_offset*/, 0);
   Slice record;
   std::string scratch;
   while (reader.ReadRecord(&record, &scratch) && s.ok()) {
@@ -2554,7 +2555,7 @@ Status VersionSet::DumpManifest(Options& options, std::string& dscname,
     VersionSet::LogReporter reporter;
     reporter.status = &s;
     log::Reader reader(std::move(file), &reporter, true/*checksum*/,
-                       0/*initial_offset*/);
+                       0/*initial_offset*/, 0);
     Slice record;
     std::string scratch;
     while (reader.ReadRecord(&record, &scratch) && s.ok()) {
@@ -2798,7 +2799,7 @@ bool VersionSet::ManifestContains(uint64_t manifest_file_num,
         fname.c_str());
     return false;
   }
-  log::Reader reader(std::move(file), nullptr, true/*checksum*/, 0);
+  log::Reader reader(std::move(file), nullptr, true/*checksum*/, 0, 0);
   Slice r;
   std::string scratch;
   bool result = false;

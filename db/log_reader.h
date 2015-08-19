@@ -52,7 +52,8 @@ class Reader {
   // The Reader will start reading at the first record located at physical
   // position >= initial_offset within the file.
   Reader(unique_ptr<SequentialFile>&& file, Reporter* reporter,
-         bool checksum, uint64_t initial_offset);
+         bool checksum, uint64_t initial_offset,
+	 uint32_t log_num);
 
   ~Reader();
 
@@ -102,6 +103,9 @@ class Reader {
 
   // Offset at which to start looking for the first record to return
   uint64_t const initial_offset_;
+
+  // which log number this is
+  uint32_t const log_number_;
 
   // Extend record types with the following special values
   enum {

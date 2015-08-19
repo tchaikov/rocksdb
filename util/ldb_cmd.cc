@@ -1415,7 +1415,12 @@ void DumpWalFile(std::string wal_file, bool print_header, bool print_values,
     }
   } else {
     StdErrReporter reporter;
-    log::Reader reader(move(file), &reporter, true, 0);
+    uint64_t log_number;
+    FileType type;
+    if (!ParseFileName(wal_file, &log_number, &type)) {
+      assert(0);
+    }
+    log::Reader reader(move(file), &reporter, true, 0, log_number);
     string scratch;
     WriteBatch batch;
     Slice record;

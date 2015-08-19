@@ -247,7 +247,7 @@ class Repairer {
     // propagating bad information (like overly large sequence
     // numbers).
     log::Reader reader(std::move(lfile), &reporter, true /*enable checksum*/,
-                       0/*initial_offset*/);
+                       0/*initial_offset*/, log);
 
     // Read all the records and add to a memtable
     std::string scratch;
@@ -405,7 +405,7 @@ class Repairer {
 
     //fprintf(stderr, "NewDescriptor:\n%s\n", edit_.DebugString().c_str());
     {
-      log::Writer log(std::move(file));
+      log::Writer log(std::move(file), 0);
       std::string record;
       edit_->EncodeTo(&record);
       status = log.AddRecord(record);
