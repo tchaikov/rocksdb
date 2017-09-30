@@ -189,8 +189,10 @@ else()
   endif()
 endif()
 
-set(CMAKE_REQUIRED_FLAGS ${CMAKE_CXX_FLAGS})
 include(CheckCXXSourceCompiles)
+if(NOT MSVC)
+  set(CMAKE_REQUIRED_FLAGS "-msse4.2")
+endif()
 CHECK_CXX_SOURCE_COMPILES("
 #include <cstdint>
 #include <nmmintrin.h>
@@ -198,6 +200,7 @@ int main() {
   volatile uint32_t x = _mm_crc32_u32(0, 0);
 }
 " HAVE_SSE42)
+unset(CMAKE_REQUIRED_FLAGS)
 if(HAVE_SSE42)
   add_definitions(-DHAVE_SSE42)
 elseif(FORCE_SSE42)
