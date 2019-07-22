@@ -416,7 +416,9 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
   endif()
 endif()
 
-if(NOT WIN32)
+if(WITH_SEASTAR)
+  add_definitions(-DROCKSDB_PLATFORM_SEASTAR)
+elseif(NOT WIN32)
   add_definitions(-DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX)
 endif()
 
@@ -749,6 +751,10 @@ if(WITH_JEMALLOC)
     port/win/win_jemalloc.cc)
 endif()
 
+elseif(WITH_SEASTAR)
+  list(APPEND SOURCES
+    port/seastar/port_seastar.cc
+    port/seastar/env_seastar.cc)
 else()
   list(APPEND SOURCES
     port/port_posix.cc
@@ -776,6 +782,23 @@ if(WITH_LIBRADOS)
   list(APPEND THIRDPARTY_LIBS rados)
 endif()
 
+option(WITH_SEASTAR "Build with Seastar" OFF)
+if(WITH_SEASTAR)
+  list(APPEND SOURCES
+    port/seastar/port_seastar.cc)
+  set(Seastar_HWLOC OFF CACHE BOOL "" FORCE)
+  set(Seastar_STD_OPTIONAL_VARIANT_STRINGVIEW ON CACHE BOOL "" FORCE)
+  set(Seastar_TESTING ON CACHE BOOL "" FORCE)
+  set(Seastar_CXX_FLAGS "-Wno-error;-Wno-sign-compare;-Wno-attributes;-Wno-ignored-qualifiers;-Wno-array-bounds;-Wno-ignored-qualifiers;-Wno-implicit-fallthrough" CACHE STRING "" FORCE)
+  add_subdirectory(third-party/seastar)
+  list(APPEND THIRDPARTY_LIBS Seastar::seastar)
+  add_executable(env_seastar_test utilities/env_seastar_test.cc)
+  target_compile_definitions(env_seastar_test
+    PRIVATE SEASTAR_TESTING_MAIN)
+  target_link_libraries(env_seastar_test
+    ${ROCKSDB_STATIC_LIB} Seastar::seastar_testing)
+endif()
+
 if(WIN32)
   set(SYSTEM_LIBS ${SYSTEM_LIBS} Shlwapi.lib Rpcrt4.lib)
   set(LIBS ${ROCKSDB_STATIC_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
@@ -790,13 +813,18 @@ else()
                         LINKER_LANGUAGE CXX
                         VERSION ${rocksdb_VERSION}
                         SOVERSION ${rocksdb_VERSION_MAJOR}
-                        CXX_STANDARD 11
+                        CXX_STANDARD 17
                         OUTPUT_NAME "rocksdb")
 endif()
 
 add_library(${ROCKSDB_STATIC_LIB} STATIC ${SOURCES})
 target_link_libraries(${ROCKSDB_STATIC_LIB}
+  PRIVATE
   ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
+# if(WITH_SEASTAR)
+#   target_link_libraries(${ROCKSDB_STATIC_LIB}
+#     PRIVATE seastar>)
+# endif()
 
 if(WIN32)
   add_library(${ROCKSDB_IMPORT_LIB} SHARED ${SOURCES})
@@ -850,8 +878,12 @@ if(NOT WIN32 OR ROCKSDB_INSTALL_ON_WINDOWS)
 
   install(DIRECTORY include/rocksdb COMPONENT devel DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
+  set(targets ${ROCKSDB_STATIC_LIB})
+  if(WITH_SEASTAR)
+    list(APPEND targets seastar)
+  endif()
   install(
-    TARGETS ${ROCKSDB_STATIC_LIB}
+    TARGETS ${targets}
     EXPORT RocksDBTargets
     COMPONENT devel
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
@@ -882,6 +914,20 @@ if(NOT WIN32 OR ROCKSDB_INSTALL_ON_WINDOWS)
     COMPONENT devel
     DESTINATION ${package_config_destination}
   )
+  
+  # install(
+  #   TARGETS seastar
+  #   EXPORTS seastar-targets
+  #   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  #   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  #   COMPONENT devel)
+
+  # install(
+  #   EXPORT seastar-targets
+  #   COMPONENT devel
+  #   DESTINATION ${package_config_destination}
+  #   NAMESPACE Seastar::
+  # )
 endif()
 
 option(WITH_TESTS "build with tests" ON)

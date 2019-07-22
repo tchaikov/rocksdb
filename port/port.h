@@ -18,4 +18,6 @@
 #include "port/port_posix.h"
 #elif defined(OS_WIN)
 #include "port/win/port_win.h"
+#elif defined(ROCKSDB_PLATFORM_SEASTAR)
+#include "port/seastar/port_seastar.h"
 #endif

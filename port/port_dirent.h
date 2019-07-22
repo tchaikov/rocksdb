@@ -40,5 +40,7 @@ using port::readdir;
 using port::closedir;
 
 }  // namespace rocksdb
-
+#elif defined(ROCKSDB_PLATFORM_SEASTAR)
+#include <dirent.h>
+#include <sys/types.h>
 #endif  // OS_WIN
