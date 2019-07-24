@@ -1,0 +1,3 @@
+[submodule "third-party/seastar"]
+	path = third-party/seastar
+	url = git@github.com:tchaikov/seastar.git
