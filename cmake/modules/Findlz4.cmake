@@ -20,6 +20,15 @@ mark_as_advanced(
   lz4_LIBRARIES
   lz4_INCLUDE_DIRS)
 
+if (lz4_FOUND)
+  set (CMAKE_REQUIRED_LIBRARIES ${lz4_LIBRARIES})
+  include (CheckSymbolExists)
+
+  check_symbol_exists (LZ4_compress_default
+    ${lz4_INCLUDE_DIRS}/lz4.h
+    lz4_HAVE_COMPRESS_DEFAULT)
+endif ()
+
 if(lz4_FOUND AND NOT (TARGET lz4::lz4))
   add_library(lz4::lz4 UNKNOWN IMPORTED)
   set_target_properties(lz4::lz4
