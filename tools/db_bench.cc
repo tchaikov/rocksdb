@@ -13,6 +13,20 @@ int main() {
   fprintf(stderr, "Please install gflags to run rocksdb tools\n");
   return 1;
 }
+#elif defined(SEASTAR_API_LEVEL)
+#include <seastar/core/app-template.hh>
+#include <seastar/core/thread.hh>
+#include <rocksdb/db_bench_tool.h>
+
+int main(int argc, char** argv) {
+  seastar::app_template app;
+  std::vector<char*> args{argv[0]};
+  return app.run(args.size(), args.data(), [&] {
+    return seastar::async([=] {
+      rocksdb::db_bench_tool(argc, argv);
+    }).or_terminate();
+  });
+}
 #else
 #include <rocksdb/db_bench_tool.h>
 int main(int argc, char** argv) { return rocksdb::db_bench_tool(argc, argv); }
